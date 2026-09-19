@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+import errorHandler from "./middlewares/errorHandler.js";
+
 const app = express();
 
 // JSON request body ko read karne ke liye
@@ -28,5 +30,8 @@ app.get("/", (req, res) => {
     message: "MERN Auth API is running",
   });
 });
+
+// Global error handler
+app.use(errorHandler);
 
 export default app;
