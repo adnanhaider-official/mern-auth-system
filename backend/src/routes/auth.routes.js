@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   getCurrentUser,
+  googleLogin,
   loginUser,
   logoutUser,
   registerUser,
@@ -23,5 +24,6 @@ router.patch(
   upload.single("profileImage"),
   updateProfile
 );
+router.post("/google", googleLogin);
 
 export default router;

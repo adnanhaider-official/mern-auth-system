@@ -6,6 +6,7 @@ import {
   uploadOnCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
+import verifyGoogleToken from "../utils/google.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -164,4 +165,61 @@ const updateProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Profile updated successfully"));
 });
 
-export { registerUser, loginUser, getCurrentUser, logoutUser, updateProfile };
+const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    throw new ApiError(400, "Google ID token is required");
+  }
+
+  const googleUser = await verifyGoogleToken(idToken);
+
+  const { sub: googleId, email, name, picture, email_verified } = googleUser;
+
+  if (!email || !email_verified) {
+    throw new ApiError(401, "Google email could not be verified");
+  }
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      name,
+      email,
+      googleId,
+      profileImage: picture || "",
+      authProvider: "google",
+    });
+  } else {
+    if (!user.googleId) {
+      user.googleId = googleId;
+      user.authProvider = "google";
+      user.profileImage = user.profileImage || picture || "";
+
+      await user.save();
+    }
+  }
+
+  const token = user.generateAuthToken();
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  };
+
+  return res
+    .status(200)
+    .cookie("token", token, cookieOptions)
+    .json(new ApiResponse(200, user, "Google login successful"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  logoutUser,
+  updateProfile,
+  googleLogin,
+};
