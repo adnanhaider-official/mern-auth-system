@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import uploadOnCloudinary from "../utils/cloudinary.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -119,16 +120,23 @@ const updateProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  // Phir user ka name update karo
+  // Name update
   user.name = name.trim();
 
-  // Database mein save karo
-  await user.save();
-
+  // Agar image upload hui hai
   if (req.file) {
-    console.log("File path:", req.file.path);
-    console.log("File name:", req.file.filename);
+    const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+
+    if (!cloudinaryResponse) {
+      throw new ApiError(500, "Image upload failed");
+    }
+
+    // Cloudinary ki URL MongoDB mein save karo
+    user.profileImage = cloudinaryResponse.secure_url;
   }
+
+  // Database mein save
+  await user.save();
 
   return res
     .status(200)
