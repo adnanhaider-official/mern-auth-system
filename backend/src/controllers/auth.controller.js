@@ -97,4 +97,36 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "User logged out successfully"));
 });
 
-export { registerUser, loginUser, getCurrentUser, logoutUser };
+const updateProfile = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    throw new ApiError(400, "Name is required");
+  }
+
+  if (name.length < 3) {
+    throw new ApiError(400, "Name must be at least 3 characters");
+  }
+
+  if (name.length > 50) {
+    throw new ApiError(400, "Name cannot exceed 50 characters");
+  }
+
+  // Pehle user find karo
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Phir user ka name update karo
+  user.name = name.trim();
+
+  // Database mein save karo
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Profile updated successfully"));
+});
+export { registerUser, loginUser, getCurrentUser, logoutUser, updateProfile };
