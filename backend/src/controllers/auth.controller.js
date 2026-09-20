@@ -38,4 +38,46 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  // Required fields check
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  // Password select:false hai,
+  // isliye login ke liye explicitly password mangwana hai
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    throw new ApiError(401, "Invalid email or password");
+  }
+
+  // Password compare
+  const isPasswordCorrect = await user.isPasswordCorrect(password);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(401, "Incorrect password");
+  }
+
+  // JWT generate
+  const token = user.generateAuthToken();
+
+  // Cookie options
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  // Password response mein nahi bhejna
+  user.password = undefined;
+
+  return res
+    .status(200)
+    .cookie("token", token, cookieOptions)
+    .json(new ApiResponse(200, user, "User logged in successfully"));
+});
+
+export { registerUser, loginUser };
