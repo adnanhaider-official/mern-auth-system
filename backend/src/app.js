@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import errorHandler from "./middlewares/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -23,13 +24,8 @@ app.use(
 // Cookies read karne ke liye
 app.use(cookieParser());
 
-// Test route
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "MERN Auth API is running",
-  });
-});
+// routes
+app.use("/api/auth", authRoutes);
 
 // Global error handler
 app.use(errorHandler);
