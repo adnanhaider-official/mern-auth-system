@@ -9,6 +9,7 @@ import {
 } from "../controllers/auth.controller.js";
 
 import verifyJwt from "../middlewares/auth.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
 
 const router = Router();
 
@@ -16,6 +17,11 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/me", verifyJwt, getCurrentUser);
 router.post("/logout", verifyJwt, logoutUser);
-router.patch("/profile", verifyJwt, updateProfile);
+router.patch(
+  "/profile",
+  verifyJwt,
+  upload.single("profileImage"),
+  updateProfile
+);
 
 export default router;

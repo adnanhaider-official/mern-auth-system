@@ -125,8 +125,14 @@ const updateProfile = asyncHandler(async (req, res) => {
   // Database mein save karo
   await user.save();
 
+  if (req.file) {
+    console.log("File path:", req.file.path);
+    console.log("File name:", req.file.filename);
+  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Profile updated successfully"));
 });
+
 export { registerUser, loginUser, getCurrentUser, logoutUser, updateProfile };
