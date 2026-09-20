@@ -10,31 +10,43 @@ import {
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Required fields check
   if (!name || !email || !password) {
     throw new ApiError(400, "Name, email and password are required");
   }
 
-  // Password minimum length
   if (password.length < 8) {
     throw new ApiError(400, "Password must be at least 8 characters");
   }
 
-  // Check if email already exists
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
     throw new ApiError(409, "Email already exists");
   }
 
-  // Create user
+  let profileImage = "";
+  let profileImagePublicId = "";
+
+  // Agar image di gayi hai
+  if (req.file) {
+    const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+
+    if (!cloudinaryResponse) {
+      throw new ApiError(500, "Image upload failed");
+    }
+
+    profileImage = cloudinaryResponse.secure_url;
+    profileImagePublicId = cloudinaryResponse.public_id;
+  }
+
   const user = await User.create({
     name,
     email,
     password,
+    profileImage,
+    profileImagePublicId,
   });
 
-  // Remove password from response
   const createdUser = await User.findById(user._id);
 
   return res
