@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    profileImagePublicId: {
+      type: String,
+      default: "",
+    },
+
     googleId: {
       type: String,
       unique: true,

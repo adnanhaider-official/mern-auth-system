@@ -2,7 +2,10 @@ import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -125,6 +128,11 @@ const updateProfile = asyncHandler(async (req, res) => {
 
   // Agar image upload hui hai
   if (req.file) {
+    // Old image delete karo
+    if (user.profileImagePublicId) {
+      await deleteFromCloudinary(user.profileImagePublicId);
+    }
+
     const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
 
     if (!cloudinaryResponse) {
@@ -133,6 +141,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     // Cloudinary ki URL MongoDB mein save karo
     user.profileImage = cloudinaryResponse.secure_url;
+    user.profileImagePublicId = cloudinaryResponse.public_id;
   }
 
   // Database mein save

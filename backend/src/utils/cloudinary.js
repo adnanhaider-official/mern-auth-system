@@ -18,12 +18,10 @@ const uploadOnCloudinary = async (localFilePath) => {
       folder: "mern-auth-system",
     });
 
-    // Upload successful hone ke baad local file delete
     fs.unlinkSync(localFilePath);
 
     return response;
   } catch (error) {
-    // Upload fail ho to local file delete
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
@@ -32,4 +30,20 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export default uploadOnCloudinary;
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) {
+      return null;
+    }
+
+    const response = await cloudinary.uploader.destroy(publicId);
+
+    return response;
+  } catch (error) {
+    console.error("Cloudinary delete error:", error.message);
+
+    return null;
+  }
+};
+
+export { uploadOnCloudinary, deleteFromCloudinary };
